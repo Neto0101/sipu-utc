@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Preguntas</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+  body {
+    background: url('{{ url_for("static", filename="img/fondo_sipu.png") }}') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    padding-top: 140px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+
+  .navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 0;
+    gap: 40px;
+  }
+
+  .navbar a {
+    color: #0d47a1;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05em;
+    position: relative;
+    padding: 5px 0;
+  }
+
+  .navbar a.logout-link {
+    color: #6c757d;
+    cursor: pointer;
+  }
+
+  .container {
+    background-color: rgba(0, 0, 0, 0.7);
+    width: 90%;
+    max-width: 1100px;
+    margin: 140px auto 40px auto;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    flex: 1;
+  }
+
+  h1 { text-align: center; margin-bottom: 30px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.95);
+    border-radius: 10px;
+    overflow: hidden;
+    color: #000;
+  }
+
+  th, td { padding: 10px; border-bottom: 1px solid #ddd; }
+  th { background: #003366; color: white; }
+
+  input, select { width: 100%; padding: 6px; border-radius: 5px; }
+
+  .actions button {
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .edit { background-color: #1565c0; color: #fff; }
+  .delete { background-color: #c0392b; color: #fff; }
+
+  .new { margin-top: 40px; text-align: center; }
+
+  .opcion-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .opcion-item input { width: 60%; margin-right: 6px; }
+  .opcion-item button {
+    background: red; border: none; color: white;
+    width: 28px; height: 28px; border-radius: 50%;
+  }
+
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+  }
+
+  .modal {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 350px;
+    text-align: center;
+    color: #333;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  }
+
+  .modal h3 {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #0d47a1;
+  }
+
+  .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+  }
+
+  .btn-confirm {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <nav class="navbar">
+    <a href="{{ url_for('gestionar_preguntas') }}">Inicio</a>
+    <a href="{{ url_for('ver_respuestas_jefe') }}">Ver Respuestas</a>
+    <a class="logout-link" onclick="abrirModal()">Cerrar Sesión</a>
+  </nav>
+</header>
+
+<div class="container">
+  <h1>Gestión de Preguntas</h1>
+
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Texto</th>
+      <th>Elemento</th> <!-- ✅ NUEVO -->
+      <th>Tipo</th>
+      <th>Opciones</th>
+      <th>Respuesta Correcta</th>
+      <th>Acciones</th>
+    </tr>
+
+    {% for p in preguntas %}
+    <tr>
+      <form method="POST">
+        <td>{{ p['id'] }}</td>
+
+        <td><input type="text" name="editar_texto" value="{{ p['texto'] }}"></td>
+
+        <!-- ✅ ELEMENTO MANUAL -->
+        <td>
+          <input type="text" name="editar_elemento" value="{{ p['elemento'] or '' }}" placeholder="Elemento">
+        </td>
+
+        <td>
+          <select name="editar_tipo">
+            <option value="texto" {% if p['tipo_pregunta']=="texto" %}selected{% endif %}>Texto</option>
+            <option value="opcion_multiple" {% if p['tipo_pregunta']=="opcion_multiple" %}selected{% endif %}>Opción múltiple</option>
+          </select>
+        </td>
+
+        <td><input type="text" name="editar_opciones" value="{{ p['opciones'] or '' }}"></td>
+
+        <td>
+          <select name="editar_respuesta_correcta">
+            {% if p['opciones'] %}
+              {% for opcion in p['opciones'].split(',') %}
+                <option value="{{ opcion }}" {% if p['respuesta_correcta'] == opcion %}selected{% endif %}>
+                  {{ opcion }}
+                </option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </td>
+
+        <td class="actions">
+          <button type="submit" name="editar_id" value="{{ p['id'] }}" class="edit">Guardar</button>
+          <button type="submit" name="eliminar_id" value="{{ p['id'] }}" class="delete">Eliminar</button>
+        </td>
+      </form>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <div class="new">
+    <form method="POST">
+      <h3>Agregar nueva pregunta</h3>
+
+      <input type="text" name="texto" placeholder="Nueva pregunta..." required><br><br>
+
+      <!-- ✅ NUEVO: ELEMENTO MANUAL -->
+      <input type="text" name="elemento" placeholder="Elemento (Ej. Conceptos, Redes, Hardware)" required><br><br>
+
+      <select name="tipo_pregunta" id="tipo_pregunta" required>
+        <option value="texto">Texto</option>
+        <option value="opcion_multiple">Opción múltiple</option>
+      </select><br><br>
+
+      <div id="contenedor_opciones" style="display:none;"></div>
+
+      <select name="respuesta_correcta" id="respuesta_correcta" style="display:none;">
+        <option value="">Selecciona respuesta correcta</option>
+      </select><br><br>
+
+      <button type="button" id="btn_agregar_opcion">➕ Agregar opción</button><br><br>
+
+      <button type="submit" name="agregar">Agregar Pregunta</button>
+    </form>
+  </div>
+</div>
+
+<!-- ✅ MODAL CERRAR SESIÓN UNIFICADO -->
+<div class="modal-bg" id="modalCerrarSesion">
+  <div class="modal">
+    <h3>¿Está seguro de cerrar sesión?</h3>
+    <div class="modal-buttons">
+      <button class="btn-confirm" onclick="window.location.href='{{ url_for('logout') }}'">Sí</button>
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const tipoSelect = document.getElementById("tipo_pregunta");
+  const contenedorOpciones = document.getElementById("contenedor_opciones");
+  const btnAgregar = document.getElementById("btn_agregar_opcion");
+  const selectCorrecta = document.getElementById("respuesta_correcta");
+
+  tipoSelect.addEventListener("change", () => {
+    if (tipoSelect.value === "opcion_multiple") {
+      contenedorOpciones.style.display = "block";
+      selectCorrecta.style.display = "block";
+    } else {
+      contenedorOpciones.style.display = "none";
+      selectCorrecta.style.display = "none";
+      contenedorOpciones.innerHTML = "";
+      selectCorrecta.innerHTML = '<option value="">Selecciona respuesta correcta</option>';
+    }
+  });
+
+  btnAgregar.addEventListener("click", () => {
+    if (tipoSelect.value !== "opcion_multiple") return;
+
+    const div = document.createElement("div");
+    div.classList.add("opcion-item");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.name = "opciones[]";
+    input.required = true;
+
+    input.addEventListener("input", actualizarCorrectas);
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.innerText = "❌";
+    btn.onclick = () => {
+      div.remove();
+      actualizarCorrectas();
+    };
+
+    div.appendChild(input);
+    div.appendChild(btn);
+    contenedorOpciones.appendChild(div);
+  });
+
+  function actualizarCorrectas() {
+    selectCorrecta.innerHTML = '<option value="">Selecciona respuesta correcta</option>';
+    document.querySelectorAll("input[name='opciones[]']").forEach(input => {
+      if (input.value.trim() !== "") {
+        const option = document.createElement("option");
+        option.value = input.value;
+        option.textContent = input.value;
+        selectCorrecta.appendChild(option);
+      }
+    });
+  }
+
+  function abrirModal() {
+    document.getElementById("modalCerrarSesion").style.display = "flex";
+  }
+
+  function cerrarModal() {
+    document.getElementById("modalCerrarSesion").style.display = "none";
+  }
+</script>
+
+</body>
+</html>

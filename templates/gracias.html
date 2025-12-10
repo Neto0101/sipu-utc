@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gracias</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 500px;
+    }
+    h2 {
+      color: #0d47a1;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #0d47a1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🎓 ¡Gracias por tus respuestas!</h2>
+    <p>Tu opinión es muy valiosa para seguir mejorando la experiencia universitaria en la UTC.</p>
+    <a href="{{ url_for('responder_personales') }}">
+
+      <button>Volver al inicio</button>
+    </a>
+  </div>
+</body>
+</html>

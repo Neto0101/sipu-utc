@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIPU UTC - Encuesta de Perfil de Ingreso</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+
+body {
+  background-color: #f5f5f5;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* HEADER TIPO UTC */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  z-index: 1000;
+}
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+  gap: 40px;
+}
+
+.navbar h1 { display: none; }
+
+.navbar a {
+  color: #0d47a1;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  position: relative;
+  padding: 5px 10px;
+  transition: color 0.3s;
+}
+
+.navbar a:hover { color: #1565c0; }
+
+.navbar a::after {
+  content: "";
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: #1565c0;
+  transition: width 0.3s ease-in-out;
+}
+
+.navbar a:hover::after { width: 100%; }
+
+/* Cerrar sesión gris claro */
+.logout-btn {
+  background: none;
+  color: #999 !important;
+  border: none;
+  padding: 5px 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.logout-btn:hover { color: #666; }
+
+/* CONTENIDO PRINCIPAL */
+#encuesta {
+  background: #f9f9f9;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  width: 80%;
+  max-width: 800px;
+  margin: 140px auto 40px auto;
+}
+
+h2 {
+  text-align: center;
+  color: #0d47a1;
+  margin-bottom: 30px;
+  font-size: 1.8em;
+}
+
+.pregunta { margin-bottom: 25px; }
+
+.pregunta label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.pregunta input[type="text"],
+.pregunta textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+}
+
+.pregunta textarea { resize: vertical; min-height: 80px; }
+
+.pregunta .opciones label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.botones {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.boton-enviar,
+.boton-regresar {
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 1.1em;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.boton-enviar {
+  background-color: #0d47a1;
+  color: white;
+}
+
+.boton-enviar:hover {
+  background-color: #1565c0;
+  transform: scale(1.05);
+}
+
+.boton-regresar {
+  background-color: #6c757d;
+  color: white;
+  text-decoration: none;
+}
+
+.boton-regresar:hover {
+  background-color: #5a6268;
+  transform: scale(1.05);
+}
+
+/* ESTILO PARA FORMULARIO DESHABILITADO */
+.disabled-form {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+footer {
+  text-align: center;
+  margin-top: auto;
+  padding: 15px;
+  font-size: 13px;
+  color: #666;
+}
+
+/* ===== MODAL CERRAR SESIÓN ESTILO ADMIN ===== */
+.modal-bg-admin {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.modal-admin {
+  background: #2b2b2b;
+  padding: 35px 40px;
+  border-radius: 14px;
+  width: 420px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(0,0,0,0.9);
+}
+
+.modal-admin h3 {
+  color: #00c3ff;
+  font-size: 20px;
+  margin-bottom: 35px;
+  font-weight: 600;
+}
+
+.modal-buttons-admin {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.btn-confirm-admin {
+  background: #e74c3c;
+  color: white;
+  padding: 12px 40px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.btn-confirm-admin:hover { background: #c0392b; }
+
+.btn-cancel-admin {
+  background: #6c757d;
+  color: white;
+  padding: 12px 40px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.btn-cancel-admin:hover { background: #5a6268; }
+
+@media (max-width: 700px) {
+  .navbar { flex-direction: column; gap: 15px; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <nav class="navbar">
+    <a href="{{ url_for('responder_personales') }}">Cuestionario Personal</a>
+    <a href="{{ url_for('encuesta', tipo='perfil_ingreso') }}">Cuestionario de Perfil de Ingresos</a>
+    <a href="#" class="logout-btn" id="btnCerrarSesion">Cerrar Sesión</a>
+  </nav>
+</header>
+
+<div id="encuesta">
+  {% if ya_contesto %}
+    <div class="disabled-form">
+      <h2>Ya has contestado este cuestionario</h2>
+      <p>No puedes volver a enviar tus respuestas.</p>
+
+      {% for p in preguntas %}
+      <div class="pregunta">
+        <label>{{ loop.index }}. {{ p['texto'] }}</label>
+        {% if p['opciones'] %}
+          <div class="opciones">
+            {% for opcion in p['opciones'].split(',') %}
+            <label>
+              <input type="radio" checked>
+              {{ opcion }}
+            </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <textarea>{{ respuestas.get(p['id'],'') }}</textarea>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <h2>Responde las siguientes preguntas</h2>
+    <form method="POST" action="{{ url_for('encuesta', tipo='perfil_ingreso') }}">
+      {% for p in preguntas %}
+      <div class="pregunta">
+        <label>{{ loop.index }}. {{ p['texto'] }}</label>
+
+        {% if p['opciones'] %}
+          <div class="opciones">
+            {% for opcion in p['opciones'].split(',') %}
+            <label>
+              <input type="radio" name="pregunta_{{ p['id'] }}" value="{{ opcion }}" required>
+              {{ opcion }}
+            </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <textarea name="pregunta_{{ p['id'] }}" required></textarea>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div class="botones">
+        <button type="submit" class="boton-enviar">Enviar respuestas</button>
+      </div>
+    </form>
+  {% endif %}
+</div>
+
+<footer>Universidad Tres Culturas © 2025</footer>
+
+<!-- MODAL CERRAR SESIÓN -->
+<div class="modal-bg-admin" id="modalCerrarSesionAdmin">
+  <div class="modal-admin">
+    <h3>¿Está seguro de cerrar sesión?</h3>
+    <div class="modal-buttons-admin">
+      <button class="btn-confirm-admin" onclick="window.location.href='{{ url_for('logout') }}'">Sí</button>
+      <button class="btn-cancel-admin" id="btnCancelarModal">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const btnCerrar = document.getElementById("btnCerrarSesion");
+  const modal = document.getElementById("modalCerrarSesionAdmin");
+  const btnCancelar = document.getElementById("btnCancelarModal");
+
+  btnCerrar.addEventListener("click", function(e){
+    e.preventDefault();
+    modal.style.display = "flex";
+  });
+
+  btnCancelar.addEventListener("click", function(){
+    modal.style.display = "none";
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Jefe - SIPU UTC</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{font-family:Arial;background:#181818;color:white;margin:0;}
+.container{width:90%;max-width:1300px;margin:40px auto;}
+h1{text-align:center;color:#00c3ff;}
+.filtros{background:#222;padding:15px;border-radius:10px;display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+select,input,button{padding:10px;border-radius:6px;border:none;}
+button{background:#00bfff;color:white;font-weight:bold;cursor:pointer;}
+.panel{background:#222;padding:20px;border-radius:12px;}
+.botones{margin:20px 0;display:flex;gap:15px;flex-wrap:wrap;}
+.graficas{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.descargar{margin-top:10px;background:#27ae60;}
+.reporteAlumno{background:#9b59b6;}
+.generalPdf{background:#e67e22;}
+.contador{margin:5px 0;font-size:14px;color:#f1c40f;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Dashboard de Riesgos - Jefe de Carrera</h1>
+
+<form method="GET" action="{{ url_for('dashboard_jefe') }}" class="filtros">
+<select name="grado"><option>Todos</option>{% for g in grados %}<option {{ 'selected' if g == filtro_grado else '' }}>{{ g }}</option>{% endfor %}</select>
+<select name="carrera"><option>Todos</option>{% for c in carreras %}<option {{ 'selected' if c == filtro_carrera else '' }}>{{ c }}</option>{% endfor %}</select>
+<select name="grupo"><option>Todos</option>{% for g in grupos %}<option {{ 'selected' if g == filtro_grupo else '' }}>{{ g }}</option>{% endfor %}</select>
+<select name="plantel"><option>Todos</option>{% for p in planteles %}<option {{ 'selected' if p == filtro_plantel else '' }}>{{ p }}</option>{% endfor %}</select>
+<input type="text" name="matricula" placeholder="Matrícula (opcional)" value="{{ filtro_matricula }}">
+<button type="submit">Filtrar</button>
+</form>
+
+<div class="botones">
+<button onclick="mostrarPersonal()">Riesgos Personales</button>
+<button onclick="mostrarHabilidades()">Riesgos por Habilidades</button>
+<button onclick="mostrarFactores()">Factores Personales</button>
+<button onclick="mostrarFactoresH()">Factores Habilidades</button>
+
+<a href="{{ url_for('reporte_general_pdf',
+grado=filtro_grado,
+carrera=filtro_carrera,
+grupo=filtro_grupo,
+plantel=filtro_plantel,
+matricula=filtro_matricula) }}">
+<button class="generalPdf">General PDF</button>
+</a>
+
+<a href="{{ url_for('gestionar_preguntas') }}"><button type="button">Regresar</button></a>
+</div>
+
+{% if alumnos_alerta %}
+<div class="panel" style="margin-bottom:20px;">
+<h3>Alertas de posible deserción</h3>
+<table style="width:100%;border-collapse:collapse;">
+<thead>
+<tr>
+<th>Matrícula</th><th>Nombre</th><th>Carrera</th><th>Plantel</th>
+<th>Grado</th><th>Grupo</th><th>Turno</th>
+<th>Riesgo Personal</th><th>Riesgo Habilidades</th>
+<th>Reporte</th>
+</tr>
+</thead>
+<tbody>
+{% for a in alumnos_alerta %}
+<tr>
+<td>{{ a.matricula }}</td>
+<td>{{ a.nombre }}</td>
+<td>{{ a.carrera }}</td>
+<td>{{ a.plantel }}</td>
+<td>{{ a.grado }}</td>
+<td>{{ a.grupo }}</td>
+<td>{{ a.turno }}</td>
+<td>{{ a.riesgo_personal }}%</td>
+<td>{{ a.riesgo_habilidades }}%</td>
+<td>
+<a href="{{ url_for('reporte_riesgo_personal',
+grado=filtro_grado,
+carrera=filtro_carrera,
+grupo=filtro_grupo,
+plantel=filtro_plantel,
+matricula=a.matricula) }}">
+<button class="reporteAlumno">PDF</button>
+</a>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+
+
+
+<div class="graficas">
+
+<div class="panel" id="personal">
+<h3>Riesgo Personal (%)</h3>
+<p class="contador">Alumnos con cuestionario personal: {{ contestaron_personal }} / {{ total_filtrados }}</p>
+<canvas id="graficaPersonal"></canvas>
+</div>
+
+<div class="panel" id="habilidades" style="display:none;">
+<h3>Riesgo por Habilidades (%)</h3>
+<p class="contador">Alumnos con cuestionario de habilidades: {{ contestaron_habilidades }} / {{ total_filtrados }}</p>
+<canvas id="graficaHabilidades"></canvas>
+</div>
+
+<div class="panel" id="factores" style="display:none;">
+<h3>Factores Personales</h3>
+<canvas id="graficaFactores"></canvas>
+</div>
+
+<div class="panel" id="factoresH" style="display:none;">
+<h3>Factores de Habilidades</h3>
+<canvas id="graficaFactoresH"></canvas>
+</div>
+
+</div>
+
+<script>
+const personal=document.getElementById("personal");
+const habilidades=document.getElementById("habilidades");
+const factores=document.getElementById("factores");
+const factoresH=document.getElementById("factoresH");
+
+function mostrarPersonal(){
+  personal.style.display="block";
+  habilidades.style.display="none";
+  factores.style.display="none";
+  factoresH.style.display="none";
+}
+function mostrarHabilidades(){
+  personal.style.display="none";
+  habilidades.style.display="block";
+  factores.style.display="none";
+  factoresH.style.display="none";
+}
+function mostrarFactores(){
+  personal.style.display="none";
+  habilidades.style.display="none";
+  factores.style.display="block";
+  factoresH.style.display="none";
+}
+function mostrarFactoresH(){
+  personal.style.display="none";
+  habilidades.style.display="none";
+  factores.style.display="none";
+  factoresH.style.display="block";
+}
+
+new Chart(document.getElementById("graficaPersonal"),{
+  type:'pie',
+  data:{
+    labels:['Riesgo','Sin Riesgo'],
+    datasets:[{
+      data:[{{ riesgo_personal }},{{ 100-riesgo_personal }}],
+      backgroundColor:['#e74c3c','#2ecc71']
+    }]
+  }
+});
+
+new Chart(document.getElementById("graficaHabilidades"),{
+  type:'pie',
+  data:{
+    labels:['Riesgo','Aprobado'],
+    datasets:[{
+      data:[{{ riesgo_habilidades }},{{ 100-riesgo_habilidades }}],
+      backgroundColor:['#f39c12','#27ae60']
+    }]
+  }
+});
+
+new Chart(document.getElementById("graficaFactores"),{
+  type:'bar',
+  data:{
+    labels:{{ factores_labels|safe }},
+    datasets:[{
+      label:'Impacto (%)',
+      data:{{ factores_valores|safe }},
+      backgroundColor:[
+        '#e74c3c','#f39c12','#2ecc71','#3498db','#9b59b6',
+        '#1abc9c','#e67e22','#34495e','#16a085','#c0392b'
+      ]
+    }]
+  },
+  options:{indexAxis:'y',scales:{x:{max:100}}}
+});
+
+new Chart(document.getElementById("graficaFactoresH"),{
+  type:'bar',
+  data:{
+    labels:{{ factores_hab_labels|safe }},
+    datasets:[{
+      label:'Impacto (%)',
+      data:{{ factores_hab_valores|safe }},
+      backgroundColor:[
+        '#8e44ad','#2980b9','#27ae60','#f1c40f','#e67e22',
+        '#1abc9c','#c0392b','#2c3e50','#16a085','#d35400'
+      ]
+    }]
+  },
+  options:{indexAxis:'y',scales:{x:{max:100}}}
+});
+</script>
+
+</div>
+</body>
+</html>

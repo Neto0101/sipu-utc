@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Respuestas de {{ alumno['nombre'] }} - SIPU UTC</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<style>
+body { background: url('{{ url_for("static", filename="img/fondo_sipu.png") }}') no-repeat center center fixed;
+       background-size: cover; font-family: 'Segoe UI', sans-serif; color: #fff; text-align: center; margin:0; padding:0; }
+.container { background-color: rgba(0,0,0,0.8); margin: 80px auto; width: 70%; border-radius: 20px; padding: 40px; box-shadow:0 0 15px rgba(255,255,255,0.3);}
+h1 { font-size:2em; margin-bottom:20px; color:#00c3ff;}
+table { width:100%; border-collapse:collapse; margin-top:20px;}
+th, td { padding:12px 15px; border-bottom:1px solid #ddd; color:#fff;}
+th { background-color:#00bfff; text-align:left;}
+tr:hover { background-color: rgba(0,191,255,0.2);}
+.back a { margin-top:20px; display:inline-block; background-color:#ff4d4d; color:#fff; padding:10px 25px; border-radius:15px; text-decoration:none;}
+.back a:hover { background-color:#e60000;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Respuestas de {{ alumno['nombre'] }}</h1>
+<p>Grado: {{ alumno['grado'] }} | Grupo: {{ alumno['grupo'] }} | Turno: {{ alumno['turno'] }}</p>
+
+{% if respuestas %}
+<table>
+    <tr>
+        <th>Pregunta</th>
+        <th>Respuesta</th>
+    </tr>
+    {% for r in respuestas %}
+    <tr>
+        <td>{{ r['pregunta'] }}</td>
+        <td>{{ r['respuesta'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Este alumno no ha respondido ninguna pregunta aún.</p>
+{% endif %}
+
+<div class="back">
+    <a href="{{ url_for('ver_respuestas_jefe') }}">Volver a la lista de alumnos</a>
+</div>
+</div>
+</body>
+</html>

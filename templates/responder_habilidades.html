@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIPU UTC - Cuestionario de Habilidades</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+
+  body {
+    background-color: #f5f5f5;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 65px;
+    z-index: 1000;
+  }
+
+  header a {
+    color: #0d47a1;
+    text-decoration: none;
+    margin: 0 25px;
+    font-size: 15px;
+    font-weight: 500;
+    position: relative;
+    transition: 0.3s;
+  }
+
+  header a:hover { color: #1565c0; }
+  header a::after {
+    content: '';
+    display: block;
+    height: 2px;
+    background: #1565c0;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: bottom right;
+  }
+  header a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+
+  #cuestionario {
+    background: #fff;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    width: 80%;
+    max-width: 700px;
+    margin: 130px auto 40px auto;
+  }
+
+  h2 { text-align: center; color: #0d47a1; margin-bottom: 30px; font-size: 1.8em; }
+
+  .pregunta { margin-bottom: 30px; }
+  .pregunta label { display: block; font-weight: 600; margin-bottom: 10px; font-size: 1.1em; }
+
+  .opciones { margin-left: 20px; }
+  .opcion { display: flex; align-items: center; margin-bottom: 8px; }
+  .opcion input[type="radio"] { margin-right: 10px; }
+
+  .pregunta input[type="text"], .pregunta textarea, .pregunta select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+  }
+  .pregunta textarea { resize: vertical; min-height: 80px; }
+
+  .botones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+  }
+
+  .boton-enviar, .boton-regresar {
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .boton-enviar { background-color: #0d47a1; color: white; }
+  .boton-enviar:hover { background-color: #1565c0; transform: scale(1.05); }
+
+  .boton-regresar {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+  .boton-regresar:hover { background-color: #5a6268; transform: scale(1.05); }
+
+  .disabled-form { opacity: 0.6; pointer-events: none; }
+
+  footer { text-align: center; margin-top: auto; padding: 15px; font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="{{ url_for('responder_personales') }}">Cuestionario Personal</a>
+  <a href="{{ url_for('responder_habilidades') }}">Cuestionario de Habilidades</a>
+  <a href="{{ url_for('encuesta', tipo='perfil_ingreso') }}">Cuestionario de Perfil de Ingreso</a>
+  <a href="{{ url_for('logout') }}" style="color:#6c757d;">Cerrar Sesión</a>
+</header>
+
+<div id="cuestionario">
+  {% if ya_contesto %}
+    <div class="disabled-form">
+      <h2>Ya has contestado este cuestionario</h2>
+      <p>No puedes volver a enviar tus respuestas.</p>
+
+      {% for pregunta in preguntas %}
+        <div class="pregunta">
+          <label>{{ loop.index }}. {{ pregunta['texto'] }}</label>
+
+          {% set valor = respuestas.get(pregunta['id'], '') %}
+
+          {% if pregunta['tipo_pregunta'] == 'opcion_multiple' %}
+            <div class="opciones">
+              {% for opcion in pregunta['opciones'].split(',') %}
+                <label class="opcion">
+                  <input type="radio" disabled name="pregunta_{{ pregunta['id'] }}" value="{{ opcion }}"
+                  {% if valor == opcion %}checked{% endif %}>
+                  {{ opcion }}
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            {% set texto_lower = pregunta['texto'].lower() %}
+            {% if 'coment' in texto_lower or 'mejor' in texto_lower or 'por qué' in texto_lower or 'qué' in texto_lower %}
+              <textarea disabled>{{ valor }}</textarea>
+            {% else %}
+              <input type="text" value="{{ valor }}" disabled>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <form method="POST" action="{{ url_for('responder_habilidades') }}">
+      <h2>Responde las siguientes preguntas</h2>
+
+      {% for pregunta in preguntas %}
+        <div class="pregunta">
+          <label>{{ loop.index }}. {{ pregunta['texto'] }}</label>
+
+          {% if pregunta['tipo_pregunta'] == 'opcion_multiple' %}
+            <div class="opciones">
+              {% for opcion in pregunta['opciones'].split(',') %}
+                <label class="opcion">
+                  <input type="radio" name="pregunta_{{ pregunta['id'] }}" value="{{ opcion }}" required>
+                  {{ opcion }}
+                </label>
+              {% endfor %}
+            </div>
+          {% else %}
+            {% set texto_lower = pregunta['texto'].lower() %}
+            {% if 'coment' in texto_lower or 'mejor' in texto_lower or 'por qué' in texto_lower or 'qué' in texto_lower %}
+              <textarea name="pregunta_{{ pregunta['id'] }}" placeholder="Escribe tu respuesta..." required></textarea>
+            {% else %}
+              <input type="text" name="pregunta_{{ pregunta['id'] }}" placeholder="Escribe tu respuesta..." required>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="botones">
+        <button type="submit" class="boton-enviar">Enviar respuestas</button>
+        <a href="{{ url_for('responder_personales') }}">
+
+      </div>
+    </form>
+  {% endif %}
+</div>
+
+<footer>Universidad Tres Culturas © 2025</footer>
+
+</body>
+</html>

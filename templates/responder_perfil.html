@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cuestionario de Perfil Profesional</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Poppins', sans-serif; background:#f4f4f4; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; }
+  form { background:white; padding:40px; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.1); width:500px; }
+  select, input[type=text] { padding:10px; margin:10px 0; width:100%; border-radius:8px; border:1px solid #ccc; }
+  button { background:#0d47a1; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; width:100%; }
+  button:hover { background:#1565c0; }
+  h2 { text-align:center; margin-bottom:20px; }
+  label { display:block; text-align:left; margin-top:10px; }
+</style>
+</head>
+<body>
+  <form method="POST" action="/guardar_perfil">
+    <h2>Cuestionario de Perfil Profesional</h2>
+
+    <label>1. ¿Qué área te gustaría desarrollar en tu carrera profesional?</label>
+    <input type="text" name="area" placeholder="Ejemplo: Desarrollo de software, redes, docencia..." required>
+
+    <label>2. ¿Qué tipo de ambiente laboral prefieres?</label>
+    <select name="ambiente" required>
+      <option value="">Selecciona</option>
+      <option>Trabajo en oficina</option>
+      <option>Trabajo de campo</option>
+      <option>Trabajo remoto</option>
+      <option>Mixto</option>
+    </select>
+
+    <label>3. ¿Te gustaría continuar con estudios de posgrado?</label>
+    <select name="posgrado" required>
+      <option value="">Selecciona</option>
+      <option>Sí</option>
+      <option>No</option>
+      <option>Tal vez</option>
+    </select>
+
+    <label>4. ¿Cómo te visualizas en 5 años?</label>
+    <input type="text" name="futuro" placeholder="Tu respuesta..." required>
+
+    <button type="submit">Enviar</button>
+  </form>
+</body>
+</html>
